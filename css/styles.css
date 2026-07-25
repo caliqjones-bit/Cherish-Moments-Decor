@@ -242,6 +242,12 @@ body.nav-open { overflow: hidden; }
   .hero-content .btn-row,
   .hero-script .ch { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
+/* Keep the hero script line on a single line on phones (shrink to fit). */
+@media (max-width: 480px) {
+  .hero .hero-script { font-size: 7.4vw; white-space: nowrap; }
+}
+/* Never let a phone number break across two lines (e.g. after the hyphen). */
+a[href^="tel:"] { white-space: nowrap; }
 .page-hero {
   position: relative; padding: calc(var(--header-h) + 5rem) 0 4.5rem;
   background: var(--evergreen-deep); color: var(--ivory); overflow: hidden;
