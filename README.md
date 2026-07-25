@@ -75,3 +75,4 @@ Upload everything except `_src/` to any static host (Netlify, Vercel, Cloudflare
 - SEO: unique titles/descriptions, canonical + Open Graph tags, LocalBusiness/Organization/Service/Breadcrumb/FAQ schema, sitemap.xml, robots.txt
 - Accessibility: WCAG 2.2 AA practices — keyboard nav, focus states, labels, alt text, reduced-motion support, accessible lightbox
 - Star-glow page transitions (with reduced-motion fallback), scroll reveals, lazy-loaded images with dimensions to prevent layout shift
+# cherish-moments-decor-real
