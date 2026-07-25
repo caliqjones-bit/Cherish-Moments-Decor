@@ -1,0 +1,10 @@
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://www.cherishmomentsdecor.com/"},
+    {"@type":"ListItem","position":2,"name":"Residential Holiday Design","item":"https://www.cherishmomentsdecor.com/residential-holiday-design"}]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Service","name":"Residential Holiday Decorating","description":"Luxury residential Christmas decorating: custom trees, mantels, staircases, entryways, and coordinated whole-home holiday installations in Central Florida.",
+   "provider":{"@id":"https://www.cherishmomentsdecor.com/#business"},
+   "areaServed":{"@type":"Place","name":"Central Florida"}}
+  </script>

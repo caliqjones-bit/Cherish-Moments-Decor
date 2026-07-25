@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /_src/
+Sitemap: https://www.cherishmomentsdecor.com/sitemap.xml

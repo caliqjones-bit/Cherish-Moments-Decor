@@ -1,0 +1,119 @@
+# Cherish Moments Decor — Netlify configuration
+# Clean URLs, 301 redirects from legacy .html paths, caching + security headers.
+
+[build]
+  publish = "."
+
+# Netlify serves /about from about.html automatically ("Pretty URLs").
+# These explicit 301s preserve SEO value from any existing links that still
+# include the .html extension, sending them to the canonical clean URL.
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/services.html"
+  to = "/services"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/residential-holiday-design.html"
+  to = "/residential-holiday-design"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/corporate-holiday-design.html"
+  to = "/corporate-holiday-design"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/our-past-work.html"
+  to = "/our-past-work"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/pricing.html"
+  to = "/pricing"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/about.html"
+  to = "/about"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/book-consultation.html"
+  to = "/book-consultation"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/shop.html"
+  to = "/shop"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/contact.html"
+  to = "/contact"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/thank-you.html"
+  to = "/thank-you"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/privacy-policy.html"
+  to = "/privacy-policy"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/terms.html"
+  to = "/terms"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/accessibility.html"
+  to = "/accessibility"
+  status = 301
+  force = true
+
+# ---- Security headers (all routes) ----
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# ---- Caching ----
+# Images use modest revalidated caching (files are swapped in place at the same
+# filename during content updates, so we avoid long "immutable" TTLs).
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, must-revalidate"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"

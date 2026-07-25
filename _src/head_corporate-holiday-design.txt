@@ -1,0 +1,10 @@
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://www.cherishmomentsdecor.com/"},
+    {"@type":"ListItem","position":2,"name":"Corporate Holiday Design","item":"https://www.cherishmomentsdecor.com/corporate-holiday-design"}]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Service","name":"Corporate Christmas Decorating","description":"Sophisticated corporate holiday installations for offices, hotel lobbies, museums, wedding venues, showrooms, and retail spaces in Central Florida.",
+   "provider":{"@id":"https://www.cherishmomentsdecor.com/#business"},
+   "areaServed":{"@type":"Place","name":"Central Florida"}}
+  </script>

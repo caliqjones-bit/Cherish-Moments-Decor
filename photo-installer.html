@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Photo Installer — Cherish Moments Decor (owner tool, do not upload to your web host)</title>
+<style>
+  :root { --green:#0d1f18; --gold:#c9a86a; --ivory:#f7f3ec; --ok:#2e7d43; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Helvetica Neue",Arial,sans-serif; background:var(--ivory); color:#2a2a28; line-height:1.6; }
+  header { background:var(--green); color:var(--ivory); padding:2.2rem 1.5rem; }
+  header h1 { font-family:Georgia,serif; font-weight:500; margin:0 0 .4rem; font-size:1.9rem; }
+  header p { margin:.2rem 0; max-width:820px; color:rgba(247,243,236,.9); }
+  .wrap { max-width:1100px; margin:0 auto; padding:1.5rem; }
+  .steps { background:#fff; border:1px solid #ddd6c8; border-left:4px solid var(--gold); border-radius:6px; padding:1.2rem 1.5rem; margin:1.5rem 0; }
+  .steps ol { margin:.5rem 0 0; padding-left:1.3rem; }
+  .steps li { margin-bottom:.5rem; }
+  .topbar { display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin:1.5rem 0; }
+  button.big {
+    background:var(--green); color:var(--ivory); border:0; border-radius:6px; cursor:pointer;
+    padding:1rem 1.8rem; font-size:1rem; letter-spacing:.05em;
+  }
+  button.big:hover { background:#6e2639; }
+  #progress { font-size:1rem; font-weight:600; color:var(--green); }
+  .mode-note { font-size:.88rem; color:#6b6b64; max-width:640px; }
+  .project-block { margin-top:2.5rem; }
+  .project-block h2 { font-family:Georgia,serif; font-weight:500; color:var(--green); font-size:1.4rem; margin:0 0 .2rem; padding-bottom:.5rem; border-bottom:2px solid var(--gold); }
+  .project-block .p-sub { margin:.1rem 0 1.2rem; font-size:.9rem; color:#6b6b64; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.2rem; padding-bottom:1rem; }
+  .slot { background:#fff; border:1px solid #ddd6c8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; }
+  .slot.done { border-color:var(--ok); box-shadow:0 0 0 2px rgba(46,125,67,.25); }
+  .thumb { position:relative; aspect-ratio:4/3; background:var(--green); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .thumb img { width:100%; height:100%; object-fit:cover; }
+  .thumb .orient { position:absolute; top:.6rem; left:.6rem; background:rgba(13,31,24,.85); color:var(--gold); font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; padding:.25rem .6rem; border-radius:999px; }
+  .thumb .badge { position:absolute; top:.6rem; right:.6rem; background:var(--ok); color:#fff; font-size:.8rem; padding:.3rem .7rem; border-radius:999px; display:none; }
+  .slot.done .badge { display:block; }
+  .body { padding:1rem 1.1rem 1.2rem; display:flex; flex-direction:column; gap:.5rem; flex:1; }
+  .body h2 { font-family:Georgia,serif; font-size:1.05rem; margin:0; color:var(--green); }
+  .body p { margin:0; font-size:.9rem; color:#55554f; flex:1; }
+  .fname { font-size:.72rem; color:#8a8a82; word-break:break-all; }
+  .pick {
+    background:#fff; color:var(--green); border:1.5px solid var(--green); border-radius:6px;
+    padding:.7rem; font-size:.9rem; cursor:pointer; width:100%;
+  }
+  .pick:hover { background:var(--green); color:var(--ivory); }
+  .slot.done .pick { border-color:var(--ok); color:var(--ok); }
+  .slot.done .pick:hover { background:var(--ok); color:#fff; }
+  .where { background:#fff8ea; border:1px solid #e8d9b5; font-size:.8rem; padding:.5rem .7rem; border-radius:5px; color:#6b5b33; }
+  #toast { position:fixed; bottom:1.2rem; left:50%; transform:translateX(-50%); background:var(--green); color:var(--ivory); padding:.9rem 1.6rem; border-radius:8px; display:none; box-shadow:0 10px 30px rgba(0,0,0,.3); max-width:90vw; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Photo Installer</h1>
+  <p><strong>Owner tool for Cherish Moments Decor.</strong> Use this page once to place your real photos into the website, then delete it (do not upload it to your web host).</p>
+</header>
+<div class="wrap">
+
+  <div class="steps">
+    <strong>How it works — 3 steps:</strong>
+    <ol>
+      <li>Click <em>“Connect the photo folder”</em> below and choose the <strong>assets → img</strong> folder inside your <strong>cherish-moments-decor</strong> website folder. (Chrome or Edge required for automatic saving.)</li>
+      <li>For each card below, click <em>“Choose this photo…”</em> and pick the matching picture from your computer. Each card describes exactly which photo it wants.</li>
+      <li>That's it — the photo is automatically renamed, resized for the web, and saved in the right place. The card turns <span style="color:var(--ok);font-weight:600">green</span> when done.</li>
+    </ol>
+  </div>
+
+  <div class="topbar">
+    <button class="big" id="connect">📁 Connect the photo folder</button>
+    <span id="progress">0 of 22 photos placed</span>
+  </div>
+  <p class="mode-note" id="mode-note">Using Safari or Firefox? No problem — photos you choose will download with the correct name instead. Move each downloaded file into the <strong>cherish-moments-decor/assets/img</strong> folder, replacing the file that's already there.</p>
+
+  <div id="projects"></div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+   PHOTOS ARE ORGANIZED BY PROJECT.
+
+   To add a NEW project later, copy the template block at the bottom of this
+   list (marked "ADD FUTURE PROJECTS HERE"), give it a title/subtitle, and add
+   one row per photo:  ["file-name.jpg", "Friendly title", "Which photo", "Tall / portrait" | "Wide / landscape"]
+   Everything else — the cards, saving, resizing, progress count — updates
+   automatically. Keep file names lowercase-with-dashes and end in .jpg.
+   ============================================================================ */
+var PROJECTS = [
+{
+  name: "Hilton Holiday Decoration 2025",
+  subtitle: "Luxury holiday styling and seasonal installation.",
+  slots: [
+  ["tree-lobby-mirror.jpg","★ The Main Tree (hero photo)","Your BEST full-height photo of the big teal & copper tree next to the gold-framed mirror — straight-on view. This one appears on the homepage and when the site is shared on social media.","Tall / portrait"],
+  ["tree-lobby-angle.jpg","Lobby Tree — angled view","The same big lobby tree photographed from an angle (the one with the desk and printer visible at the left).","Tall / portrait"],
+  ["tree-lobby-detail-angle.jpg","Lobby Tree — third view","The remaining photo of the big lobby tree — closer view with more marble wall visible.","Tall / portrait"],
+  ["tree-emerald-copper-full.jpg","Emerald & Copper Tree","The tall tree covered in green and copper balls with the big pink/aqua gem ornaments (artwork of an eye on the wall behind it).","Tall / portrait"],
+  ["tree-tabletop-gold-teal.jpg","Small Tabletop Tree","The small gold & aqua tree sitting on the shiny gold pedestal box.","Tall / portrait"],
+  ["tree-base-gold-pedestal.jpg","Tree Base close-up","Close-up of the bottom of the big tree — oversized ornaments resting on the mirrored gold box.","Tall / portrait"],
+  ["tree-topper-velvet-magnolia.jpg","Tree Topper close-up","Looking up at the top of the tree — teal velvet leaves and silvery-gold magnolia leaves with sparkly berries.","Tall / portrait"],
+  ["garland-mantel-orange-teal.jpg","Garland close-up (orange & teal)","Close-up of garland with shiny orange balls and curling teal velvet ribbon.","Tall / portrait"],
+  ["garland-drop-copper-finial.jpg","Hanging Garland with long ornament","The vertical garland hanging beside the marble wall, with the long teardrop-shaped copper ornament.","Tall / portrait"],
+  ["garland-mantel-closeup.jpg","Mantel Garland with candles","Close-up of the garland on top of the gold fireplace, gold candlesticks in the background.","Tall / portrait"],
+  ["mantel-fireplace-gold-full.jpg","Gold Fireplace — full view #1","The whole gold fireplace with garland, candles, the 'Level Directory' sign, and orange gifts below.","Tall / portrait"],
+  ["mantel-fireplace-wide.jpg","Gold Fireplace — full view #2","Your second full photo of the gold fireplace scene (slightly different angle).","Tall / portrait"],
+  ["gifts-orange-velvet-stack.jpg","Orange Gifts — stack","The stack of orange-wrapped gifts with dark teal velvet bows (taller shot showing several boxes).","Tall / portrait"],
+  ["gifts-orange-velvet-closeup.jpg","Orange Gifts — bows close-up","The tighter close-up of the orange gifts where the velvet bows fill the frame.","Tall / portrait"],
+  ["detail-teal-velvet-leaves.jpg","Detail: velvet leaves (wide)","WIDE close-up of teal velvet leaves with sparkly silver clusters among ornaments.","Wide / landscape"],
+  ["detail-teal-bow-ornaments.jpg","Detail: teal bow & glitter ball (wide)","WIDE close-up featuring the big teal velvet bow and the green glitter ball with jeweled ribbon.","Wide / landscape"],
+  ["detail-copper-ball-berries.jpg","Detail: copper balls & red berries (wide)","WIDE close-up of shiny copper balls with red berries and copper glitter leaves.","Wide / landscape"],
+  ["detail-copper-leaves-berries.jpg","Detail: copper leaves & berries (tall)","TALL close-up of the glittery copper eucalyptus leaves and red berries over teal balls.","Tall / portrait"],
+  ["detail-glitter-leaves-teal-balls.jpg","Detail: glitter leaves in warm light (wide)","WIDE close-up of copper glitter leaves and berries over teal balls with warm lights glowing.","Wide / landscape"],
+  ["detail-magenta-gem-ornament.jpg","Detail: pink gem ornament (wide)","WIDE close-up with the faceted hot-pink gem ornament in focus among teal balls.","Wide / landscape"],
+  ["hero-tree-lobby.jpg","Background photo (wide crop)","Any WIDE photo or crop of your strongest installation — used as a soft background behind text. A sideways crop of the lobby tree works well.","Wide / landscape"],
+  ["video-poster.jpg","Video cover image","A still frame from your installation video (or any wide photo) — shown before videos play. Skip if unsure.","Wide / landscape"]
+  ]
+}
+
+/* ---------- ADD FUTURE PROJECTS HERE ----------
+   Remove the surrounding comment markers, then edit the title and photo rows:
+
+,{
+  name: "New Project Name 2026",
+  subtitle: "Short one-line description of this project.",
+  slots: [
+    ["new-project-hero-2026.jpg","Main photo","Your best wide or tall shot of this project.","Tall / portrait"],
+    ["new-project-detail-2026.jpg","Close-up detail","A close-up detail shot.","Wide / landscape"]
+  ]
+}
+------------------------------------------------- */
+
+];
+/* Flat list of every slot across all projects (used for counting + saving). */
+var SLOTS = PROJECTS.reduce(function (a, p) { return a.concat(p.slots); }, []);
+
+var dirHandle = null, doneCount = 0;
+var projectsEl = document.getElementById("projects");
+var toast = document.getElementById("toast");
+
+function showToast(msg, ms) {
+  toast.textContent = msg; toast.style.display = "block";
+  clearTimeout(showToast.t); showToast.t = setTimeout(function(){ toast.style.display="none"; }, ms || 3500);
+}
+function updateProgress() {
+  document.getElementById("progress").textContent = doneCount + " of " + SLOTS.length + " photos placed";
+}
+
+function esc(str) { return String(str).replace(/[&<>"]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]; }); }
+
+var slotIndex = 0;
+PROJECTS.forEach(function (project) {
+  var block = document.createElement("section");
+  block.className = "project-block";
+  var head = "<h2>" + esc(project.name) + "</h2>";
+  if (project.subtitle) head += '<p class="p-sub">' + esc(project.subtitle) + "</p>";
+  head += '<div class="grid"></div>';
+  block.innerHTML = head;
+  var grid = block.querySelector(".grid");
+
+  project.slots.forEach(function (s) {
+    slotIndex++;
+    var card = document.createElement("div");
+    card.className = "slot"; card.id = "slot-" + slotIndex;
+    card.innerHTML =
+      '<div class="thumb"><img src="assets/img/' + s[0] + '" alt=""><span class="orient">' + esc(s[3]) + '</span><span class="badge">✓ Placed</span></div>' +
+      '<div class="body"><h2>' + esc(s[1]) + "</h2><p>" + esc(s[2]) + "</p>" +
+      '<span class="fname">Saved as: ' + esc(s[0]) + "</span>" +
+      '<button class="pick" type="button">Choose this photo…</button>' +
+      '<input type="file" accept="image/*" hidden></div>';
+    grid.appendChild(card);
+    var input = card.querySelector("input");
+    card.querySelector(".pick").addEventListener("click", function(){ input.click(); });
+    input.addEventListener("change", function () {
+      if (input.files && input.files[0]) placePhoto(input.files[0], s[0], card);
+    });
+  });
+
+  projectsEl.appendChild(block);
+});
+updateProgress();
+
+document.getElementById("connect").addEventListener("click", async function () {
+  if (!window.showDirectoryPicker) {
+    showToast("This browser can't save directly — use Chrome or Edge, or use the download method described below the button.", 6000);
+    return;
+  }
+  try {
+    dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+    // sanity check: does it look like the img folder?
+    var looksRight = false;
+    for await (var name of dirHandle.keys()) { if (name === "tree-lobby-mirror.jpg") { looksRight = true; break; } }
+    if (!looksRight && dirHandle.name !== "img") {
+      showToast("Hmm — that doesn't look like the assets/img folder. Please choose cherish-moments-decor → assets → img.", 6000);
+      dirHandle = null; return;
+    }
+    document.getElementById("connect").textContent = "✓ Folder connected — now pick your photos below";
+    document.getElementById("connect").style.background = "#2e7d43";
+    document.getElementById("mode-note").style.display = "none";
+    showToast("Folder connected. Click any card to place its photo.");
+  } catch (e) { /* user cancelled */ }
+});
+
+function resizeImage(file, maxEdge) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function () {
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, maxEdge / Math.max(w, h));
+      var cw = Math.round(w * scale), ch = Math.round(h * scale);
+      var c = document.createElement("canvas"); c.width = cw; c.height = ch;
+      c.getContext("2d").drawImage(img, 0, 0, cw, ch);
+      c.toBlob(function (b) { b ? resolve(b) : reject(new Error("encode failed")); }, "image/jpeg", 0.84);
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function placePhoto(file, filename, card) {
+  try {
+    showToast("Processing " + file.name + "…", 8000);
+    var blob = await resizeImage(file, 2000);
+    if (dirHandle) {
+      var fh = await dirHandle.getFileHandle(filename, { create: true });
+      var w = await fh.createWritable();
+      await w.write(blob); await w.close();
+      showToast("Saved ✓ " + filename);
+    } else {
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      showToast("Downloaded as " + filename + " — move it into assets/img, replacing the old file.", 7000);
+    }
+    if (!card.classList.contains("done")) { card.classList.add("done"); doneCount++; updateProgress(); }
+    card.querySelector(".thumb img").src = URL.createObjectURL(blob);
+    if (doneCount === SLOTS.length) showToast("All photos placed! Open index.html to see your finished website. You can delete photo-installer.html now.", 10000);
+  } catch (e) {
+    showToast("Sorry, that photo couldn't be processed (" + e.message + "). Try a JPG or PNG file.", 6000);
+  }
+}
+</script>
+</body>
+</html>

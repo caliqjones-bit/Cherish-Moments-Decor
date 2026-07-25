@@ -1,0 +1,8 @@
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Organization",
+   "name":"Cherish Moments Decor","legalName":"Cherish Moments Decor LLC",
+   "url":"https://www.cherishmomentsdecor.com/",
+   "email":"cherishmomentsdecorllc@gmail.com","telephone":"+1-347-409-4115",
+   "slogan":"Luxury Holiday Tree Design. Designed to Be Remembered.",
+   "areaServed":{"@type":"Place","name":"Central Florida"}}
+  </script>
