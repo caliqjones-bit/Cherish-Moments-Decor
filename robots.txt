@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /_src/
+Disallow: /admin
+Disallow: /admin.html
 Sitemap: https://www.cherishmomentsdecor.com/sitemap.xml

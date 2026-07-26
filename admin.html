@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Consultations — Admin | Cherish Moments Decor</title>
+  <style>
+    :root {
+      --evergreen: #163026; --evergreen-deep: #0d1f18;
+      --winter-white: #fdfcf9; --champagne: #c9a86a; --champagne-soft: #e3cfa4;
+      --ink: #2a2a28; --gold-line: rgba(201, 168, 106, 0.45);
+      --font-serif: "Cormorant Garamond", Georgia, serif;
+      --font-sans: "Jost", "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: var(--font-sans); color: var(--ink);
+      background: #f2efe8; line-height: 1.5;
+    }
+    a { color: #7a5c1f; }
+    .topbar {
+      background: var(--evergreen-deep); color: var(--winter-white);
+      padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem;
+      flex-wrap: wrap; border-bottom: 3px solid var(--champagne);
+    }
+    .topbar h1 {
+      font-family: var(--font-serif); font-weight: 600; margin: 0;
+      font-size: 1.5rem; letter-spacing: .01em;
+    }
+    .topbar .count { color: var(--champagne-soft); font-size: .85rem; }
+    .topbar .spacer { flex: 1; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 1.25rem; }
+    button, input {
+      font-family: var(--font-sans); font-size: 1rem;
+    }
+    button {
+      background: var(--champagne); color: var(--evergreen-deep); border: 0;
+      padding: .55rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600;
+      letter-spacing: .03em;
+    }
+    button.ghost { background: transparent; color: var(--winter-white); border: 1px solid var(--gold-line); }
+    button:hover { filter: brightness(1.05); }
+    input[type="password"], input[type="search"], input[type="text"] {
+      padding: .6rem .75rem; border: 1px solid #cdc7ba; border-radius: 6px; width: 100%;
+      background: #fff;
+    }
+    /* Login */
+    .login { max-width: 380px; margin: 12vh auto; background: #fff; padding: 2rem;
+      border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.08); text-align: center; }
+    .login h2 { font-family: var(--font-serif); font-size: 1.7rem; margin: 0 0 .25rem; color: var(--evergreen-deep); }
+    .login p { color: #6b6b66; margin: 0 0 1.25rem; font-size: .92rem; }
+    .login form { display: flex; flex-direction: column; gap: .75rem; }
+    .err { color: #a12b2b; font-size: .88rem; min-height: 1.2em; margin-top: .25rem; }
+    /* Toolbar */
+    .toolbar { display: flex; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .toolbar input[type="search"] { flex: 1; min-width: 180px; }
+    .toolbar button { background: #e7e1d4; color: var(--evergreen-deep); }
+    /* Cards */
+    .card { background: #fff; border: 1px solid #e6e0d3; border-left: 4px solid var(--champagne);
+      border-radius: 10px; padding: 1rem 1.15rem; margin-bottom: 1rem; }
+    .card-head { display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; }
+    .card-head .name { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 600; color: var(--evergreen-deep); }
+    .card-head .when { color: #8a8a84; font-size: .82rem; margin-left: auto; }
+    .badge { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
+      padding: .18rem .5rem; border-radius: 999px; font-weight: 700; }
+    .badge.confirmed { background: #dff0e4; color: #1c6b3f; }
+    .badge.partial   { background: #fdf0d6; color: #8a6218; }
+    .badge.received, .badge.needs_attention { background: #fbe0dd; color: #a12b2b; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .5rem 1.25rem; margin-top: .85rem; }
+    .field .label { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: #9a948a; display: block; }
+    .field .val { font-size: .95rem; word-break: break-word; }
+    .notes { margin-top: .85rem; padding-top: .75rem; border-top: 1px dashed #e0dacd; }
+    .notes .label { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: #9a948a; }
+    .flags { margin-top: .75rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+    .flag { font-size: .7rem; padding: .15rem .5rem; border-radius: 4px; background: #eee; color: #666; }
+    .flag.on { background: #dff0e4; color: #1c6b3f; }
+    .empty, .loading { text-align: center; color: #7a746a; padding: 3rem 1rem; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- Login screen -->
+  <div id="login-screen" class="login">
+    <h2>Consultations</h2>
+    <p>Enter the admin password to view booking requests.</p>
+    <form id="login-form">
+      <input type="password" id="pw" placeholder="Admin password" autocomplete="current-password" required autofocus>
+      <button type="submit">Sign in</button>
+      <div class="err" id="login-err"></div>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dash" class="hidden">
+    <div class="topbar">
+      <h1>Consultations</h1>
+      <span class="count" id="count"></span>
+      <span class="spacer"></span>
+      <button class="ghost" id="refresh">Refresh</button>
+      <button class="ghost" id="logout">Log out</button>
+    </div>
+    <div class="wrap">
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Search name, email, city, project type…">
+      </div>
+      <div id="list"></div>
+      <div id="state"></div>
+    </div>
+  </div>
+
+  <script>
+    var KEY = "cmd_admin_pw";
+    var all = [];
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c];
+      });
+    }
+    function fmtDate(iso) {
+      if (!iso) return "";
+      var d = new Date(iso);
+      if (isNaN(d)) return esc(iso);
+      return d.toLocaleString(undefined, { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+    }
+    function field(label, val, opts) {
+      if (val == null || val === "") return "";
+      opts = opts || {};
+      var inner = opts.html ? val : esc(val);
+      return '<div class="field"><span class="label">' + esc(label) + '</span><span class="val">' + inner + '</span></div>';
+    }
+
+    function render(rows) {
+      var list = document.getElementById("list");
+      var state = document.getElementById("state");
+      if (!rows.length) {
+        list.innerHTML = "";
+        state.innerHTML = '<div class="empty">No consultations yet.</div>';
+        return;
+      }
+      state.innerHTML = "";
+      list.innerHTML = rows.map(function (r) {
+        var name = (r.full_name || ((r.first_name || "") + " " + (r.last_name || ""))).trim() || "(no name)";
+        var status = (r.status || "received").toLowerCase();
+        var email = r.email ? '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : "";
+        var phone = r.phone ? '<a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a>' : "";
+        var notes = r.notes ? '<div class="notes"><span class="label">Notes</span><div>' + esc(r.notes) + '</div></div>' : "";
+        return '' +
+          '<div class="card">' +
+            '<div class="card-head">' +
+              '<span class="name">' + esc(name) + '</span>' +
+              '<span class="badge ' + esc(status) + '">' + esc(status.replace(/_/g," ")) + '</span>' +
+              '<span class="when">' + fmtDate(r.created_at) + '</span>' +
+            '</div>' +
+            '<div class="grid">' +
+              field("Email", email, { html:true }) +
+              field("Phone", phone, { html:true }) +
+              field("Project type", r.project_type) +
+              field("City", r.city) +
+              field("Address", r.project_address) +
+              field("Preferred date", r.preferred_installation_date) +
+              field("Tree height", r.tree_height) +
+              field("Tree count", r.tree_count) +
+              field("Services", r.services_requested) +
+              field("Budget", r.budget) +
+              field("Format", r.consultation_format) +
+            '</div>' +
+            notes +
+            '<div class="flags">' +
+              '<span class="flag ' + (r.email_sent ? "on":"") + '">customer email ' + (r.email_sent ? "sent":"—") + '</span>' +
+              '<span class="flag ' + (r.staff_notified ? "on":"") + '">staff notified ' + (r.staff_notified ? "yes":"—") + '</span>' +
+            '</div>' +
+          '</div>';
+      }).join("");
+    }
+
+    function applySearch() {
+      var q = document.getElementById("search").value.trim().toLowerCase();
+      if (!q) return render(all);
+      render(all.filter(function (r) {
+        return [r.full_name, r.first_name, r.last_name, r.email, r.city, r.project_type, r.notes]
+          .join(" ").toLowerCase().indexOf(q) !== -1;
+      }));
+    }
+
+    function showDash() {
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("dash").classList.remove("hidden");
+    }
+    function showLogin(msg) {
+      document.getElementById("dash").classList.add("hidden");
+      document.getElementById("login-screen").classList.remove("hidden");
+      document.getElementById("login-err").textContent = msg || "";
+    }
+
+    async function load(pw) {
+      document.getElementById("state").innerHTML = '<div class="loading">Loading…</div>';
+      var res, data;
+      try {
+        res = await fetch("/api/consultations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw })
+        });
+        data = await res.json();
+      } catch (e) {
+        document.getElementById("state").innerHTML = '<div class="empty">Network error. Try again.</div>';
+        return false;
+      }
+      if (res.status === 401) { sessionStorage.removeItem(KEY); showLogin("Incorrect password."); return false; }
+      if (res.status === 503) { showLogin("Admin view isn't enabled yet (ADMIN_PASSWORD not set in Vercel)."); return false; }
+      if (!data.ok) { document.getElementById("state").innerHTML = '<div class="empty">Error: ' + esc(data.error || "unknown") + '</div>'; return true; }
+      all = data.consultations || [];
+      document.getElementById("count").textContent = all.length + (all.length === 1 ? " request" : " requests");
+      applySearch();
+      return true;
+    }
+
+    // Wire up
+    document.getElementById("login-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var pw = document.getElementById("pw").value;
+      document.getElementById("login-err").textContent = "";
+      showDash();
+      var ok = await load(pw);
+      if (ok) sessionStorage.setItem(KEY, pw);
+    });
+    document.getElementById("refresh").addEventListener("click", function () {
+      var pw = sessionStorage.getItem(KEY); if (pw) load(pw);
+    });
+    document.getElementById("logout").addEventListener("click", function () {
+      sessionStorage.removeItem(KEY); document.getElementById("pw").value = ""; showLogin("");
+    });
+    document.getElementById("search").addEventListener("input", applySearch);
+
+    // Auto-load if already signed in this session
+    (function () {
+      var pw = sessionStorage.getItem(KEY);
+      if (pw) { showDash(); load(pw); }
+    })();
+  </script>
+</body>
+</html>
