@@ -70,6 +70,9 @@
     .badge.partial   { background: #fdf0d6; color: #8a6218; }
     .badge.received, .badge.needs_attention { background: #fbe0dd; color: #a12b2b; }
     .badge.open { background: #e7e1d4; color: #5a5442; }
+    .badge.deleted { background: #eee; color: #999; }
+    .deleted-note { color: #7a746a; font-size: .9rem; margin: 0 0 1rem; }
+    .card.is-deleted { border-left-color: #bbb; opacity: .9; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: .5rem 1.25rem; margin-top: .85rem; }
     .field .label { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: #9a948a; display: block; }
@@ -103,17 +106,20 @@
   <!-- Dashboard -->
   <div id="dash" class="hidden">
     <div class="topbar">
-      <h1>Consultations</h1>
+      <h1 id="view-title">Consultations</h1>
       <span class="count" id="count"></span>
       <span class="spacer"></span>
+      <button class="ghost" id="show-deleted">Recently deleted</button>
+      <button class="ghost hidden" id="show-active">← Consultations</button>
       <button class="ghost" id="refresh">Refresh</button>
       <button class="ghost" id="logout">Log out</button>
     </div>
     <div class="wrap">
-      <div class="toolbar">
+      <div class="toolbar" id="toolbar">
         <input type="search" id="search" placeholder="Search name, email, city, project type…">
         <label class="toggle"><input type="checkbox" id="hide-completed"> Hide completed</label>
       </div>
+      <p id="deleted-note" class="deleted-note hidden">Deleted consultations are kept here so you can recover them. "Delete permanently" cannot be undone.</p>
       <div id="list"></div>
       <div id="state"></div>
     </div>
@@ -121,7 +127,9 @@
 
   <script>
     var KEY = "cmd_admin_pw";
-    var all = [];
+    var all = [];        // active consultations
+    var deleted = [];    // recently-deleted consultations
+    var view = "active"; // "active" | "deleted"
 
     function esc(s) {
       return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -141,55 +149,69 @@
       return '<div class="field"><span class="label">' + esc(label) + '</span><span class="val">' + inner + '</span></div>';
     }
 
-    function render(rows) {
-      var list = document.getElementById("list");
-      var state = document.getElementById("state");
-      if (!rows.length) {
-        list.innerHTML = "";
-        state.innerHTML = '<div class="empty">No consultations yet.</div>';
-        return;
-      }
-      state.innerHTML = "";
-      list.innerHTML = rows.map(function (r) {
-        var name = (r.full_name || ((r.first_name || "") + " " + (r.last_name || ""))).trim() || "(no name)";
-        var status = (r.status || "received").toLowerCase();
-        var email = r.email ? '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : "";
-        var phone = r.phone ? '<a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a>' : "";
-        var notes = r.notes ? '<div class="notes"><span class="label">Notes</span><div>' + esc(r.notes) + '</div></div>' : "";
+    function cardHTML(r, mode) {
+      var name = (r.full_name || ((r.first_name || "") + " " + (r.last_name || ""))).trim() || "(no name)";
+      var status = (r.status || "received").toLowerCase();
+      var email = r.email ? '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : "";
+      var phone = r.phone ? '<a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a>' : "";
+      var notes = r.notes ? '<div class="notes"><span class="label">Notes</span><div>' + esc(r.notes) + '</div></div>' : "";
+
+      var badge, when, actions, flags = "";
+      if (mode === "deleted") {
+        badge = '<span class="badge deleted">deleted</span>';
+        when = '<span class="when">Deleted ' + fmtDate(r.updated_at) + '</span>';
+        actions = '<div class="actions">' +
+          '<button class="mark" data-action="restore" data-id="' + esc(r.id) + '">Recover</button>' +
+          '<button class="danger" data-action="deleteForever" data-id="' + esc(r.id) + '">Delete permanently</button></div>';
+      } else {
         var completed = status === "completed";
         var toggleBtn = completed
           ? '<button class="unmark" data-action="toggle" data-id="' + esc(r.id) + '" data-to="open">Mark not completed</button>'
           : '<button class="mark" data-action="toggle" data-id="' + esc(r.id) + '" data-to="completed">Mark completed</button>';
-        var actions = '<div class="actions">' + toggleBtn +
-          '<button class="danger" data-action="delete" data-id="' + esc(r.id) + '">Delete</button></div>';
-        return '' +
-          '<div class="card">' +
-            '<div class="card-head">' +
-              '<span class="name">' + esc(name) + '</span>' +
-              '<span class="badge ' + esc(status) + '">' + esc(status.replace(/_/g," ")) + '</span>' +
-              '<span class="when">' + fmtDate(r.created_at) + '</span>' +
-            '</div>' +
-            '<div class="grid">' +
-              field("Email", email, { html:true }) +
-              field("Phone", phone, { html:true }) +
-              field("Project type", r.project_type) +
-              field("City", r.city) +
-              field("Address", r.project_address) +
-              field("Preferred date", r.preferred_installation_date) +
-              field("Tree height", r.tree_height) +
-              field("Tree count", r.tree_count) +
-              field("Services", r.services_requested) +
-              field("Budget", r.budget) +
-              field("Format", r.consultation_format) +
-            '</div>' +
-            notes +
-            '<div class="flags">' +
-              '<span class="flag ' + (r.email_sent ? "on":"") + '">customer email ' + (r.email_sent ? "sent":"—") + '</span>' +
-              '<span class="flag ' + (r.staff_notified ? "on":"") + '">staff notified ' + (r.staff_notified ? "yes":"—") + '</span>' +
-            '</div>' +
-            actions +
+        badge = '<span class="badge ' + esc(status) + '">' + esc(status.replace(/_/g, " ")) + '</span>';
+        when = '<span class="when">' + fmtDate(r.created_at) + '</span>';
+        flags = '<div class="flags">' +
+          '<span class="flag ' + (r.email_sent ? "on" : "") + '">customer email ' + (r.email_sent ? "sent" : "—") + '</span>' +
+          '<span class="flag ' + (r.staff_notified ? "on" : "") + '">staff notified ' + (r.staff_notified ? "yes" : "—") + '</span>' +
           '</div>';
-      }).join("");
+        actions = '<div class="actions">' + toggleBtn +
+          '<button class="danger" data-action="delete" data-id="' + esc(r.id) + '">Delete</button></div>';
+      }
+
+      return '' +
+        '<div class="card' + (mode === "deleted" ? " is-deleted" : "") + '">' +
+          '<div class="card-head">' +
+            '<span class="name">' + esc(name) + '</span>' + badge + when +
+          '</div>' +
+          '<div class="grid">' +
+            field("Email", email, { html: true }) +
+            field("Phone", phone, { html: true }) +
+            field("Project type", r.project_type) +
+            field("City", r.city) +
+            field("Address", r.project_address) +
+            field("Preferred date", r.preferred_installation_date) +
+            field("Tree height", r.tree_height) +
+            field("Tree count", r.tree_count) +
+            field("Services", r.services_requested) +
+            field("Budget", r.budget) +
+            field("Format", r.consultation_format) +
+          '</div>' +
+          notes + flags + actions +
+        '</div>';
+    }
+
+    function render(rows, mode) {
+      mode = mode || "active";
+      var list = document.getElementById("list");
+      var state = document.getElementById("state");
+      if (!rows.length) {
+        list.innerHTML = "";
+        state.innerHTML = '<div class="empty">' +
+          (mode === "deleted" ? "Nothing in Recently Deleted." : "No consultations yet.") + '</div>';
+        return;
+      }
+      state.innerHTML = "";
+      list.innerHTML = rows.map(function (r) { return cardHTML(r, mode); }).join("");
     }
 
     function applySearch() {
@@ -200,7 +222,7 @@
         if (!q) return true;
         return [r.full_name, r.first_name, r.last_name, r.email, r.city, r.project_type, r.notes]
           .join(" ").toLowerCase().indexOf(q) !== -1;
-      }));
+      }), "active");
     }
 
     function showDash() {
@@ -213,83 +235,119 @@
       document.getElementById("login-err").textContent = msg || "";
     }
 
-    async function load(pw) {
-      document.getElementById("state").innerHTML = '<div class="loading">Loading…</div>';
+    // Single fetch helper. Returns parsed data, or null after handling auth/network.
+    async function fetchAction(pw, payload) {
+      payload.password = pw;
       var res, data;
       try {
         res = await fetch("/api/consultations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: pw })
+          body: JSON.stringify(payload)
         });
         data = await res.json();
       } catch (e) {
         document.getElementById("state").innerHTML = '<div class="empty">Network error. Try again.</div>';
-        return false;
+        return null;
       }
-      if (res.status === 401) { sessionStorage.removeItem(KEY); showLogin("Incorrect password."); return false; }
-      if (res.status === 503) { showLogin("Admin view isn't enabled yet (ADMIN_PASSWORD not set in Vercel)."); return false; }
-      if (!data.ok) { document.getElementById("state").innerHTML = '<div class="empty">Error: ' + esc(data.error || "unknown") + '</div>'; return true; }
+      if (res.status === 401) { sessionStorage.removeItem(KEY); showLogin("Incorrect password."); return null; }
+      if (res.status === 503) { showLogin("Admin view isn't enabled yet (ADMIN_PASSWORD not set in Vercel)."); return null; }
+      return data;
+    }
+
+    async function load(pw) {
+      document.getElementById("state").innerHTML = '<div class="loading">Loading…</div>';
+      var data = await fetchAction(pw, { action: "list" });
+      if (!data) return;
+      if (!data.ok) { document.getElementById("state").innerHTML = '<div class="empty">Error: ' + esc(data.error || "unknown") + '</div>'; return; }
       all = data.consultations || [];
       document.getElementById("count").textContent = all.length + (all.length === 1 ? " request" : " requests");
       applySearch();
-      return true;
+    }
+
+    async function loadDeleted(pw) {
+      document.getElementById("state").innerHTML = '<div class="loading">Loading…</div>';
+      var data = await fetchAction(pw, { action: "listDeleted" });
+      if (!data) return;
+      if (!data.ok) { document.getElementById("state").innerHTML = '<div class="empty">Error: ' + esc(data.error || "unknown") + '</div>'; return; }
+      deleted = data.consultations || [];
+      document.getElementById("count").textContent = deleted.length + " in Recently Deleted";
+      render(deleted, "deleted");
+    }
+
+    function refresh() {
+      var pw = sessionStorage.getItem(KEY);
+      if (!pw) return;
+      if (view === "deleted") loadDeleted(pw); else load(pw);
+    }
+
+    function showActiveView() {
+      view = "active";
+      document.getElementById("view-title").textContent = "Consultations";
+      document.getElementById("toolbar").classList.remove("hidden");
+      document.getElementById("deleted-note").classList.add("hidden");
+      document.getElementById("show-deleted").classList.remove("hidden");
+      document.getElementById("show-active").classList.add("hidden");
+      refresh();
+    }
+    function showDeletedView() {
+      view = "deleted";
+      document.getElementById("view-title").textContent = "Recently Deleted";
+      document.getElementById("toolbar").classList.add("hidden");
+      document.getElementById("deleted-note").classList.remove("hidden");
+      document.getElementById("show-deleted").classList.add("hidden");
+      document.getElementById("show-active").classList.remove("hidden");
+      refresh();
     }
 
     // Wire up
-    document.getElementById("login-form").addEventListener("submit", async function (e) {
+    document.getElementById("login-form").addEventListener("submit", function (e) {
       e.preventDefault();
       var pw = document.getElementById("pw").value;
       document.getElementById("login-err").textContent = "";
       showDash();
-      var ok = await load(pw);
-      if (ok) sessionStorage.setItem(KEY, pw);
+      sessionStorage.setItem(KEY, pw); // optimistic; cleared on 401 by fetchAction
+      showActiveView();
     });
-    document.getElementById("refresh").addEventListener("click", function () {
-      var pw = sessionStorage.getItem(KEY); if (pw) load(pw);
-    });
+    document.getElementById("refresh").addEventListener("click", refresh);
+    document.getElementById("show-deleted").addEventListener("click", showDeletedView);
+    document.getElementById("show-active").addEventListener("click", showActiveView);
     document.getElementById("logout").addEventListener("click", function () {
-      sessionStorage.removeItem(KEY); document.getElementById("pw").value = ""; showLogin("");
+      sessionStorage.removeItem(KEY); document.getElementById("pw").value = ""; view = "active"; showLogin("");
     });
     document.getElementById("search").addEventListener("input", applySearch);
     document.getElementById("hide-completed").addEventListener("change", applySearch);
 
-    // Per-card actions (mark completed / not completed / delete) via delegation
+    // Per-card actions via delegation
     async function doAction(payload) {
       var pw = sessionStorage.getItem(KEY);
       if (!pw) { showLogin("Session expired — sign in again."); return; }
-      payload.password = pw;
-      try {
-        var res = await fetch("/api/consultations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        var data = await res.json();
-        if (res.status === 401) { sessionStorage.removeItem(KEY); showLogin("Session expired — sign in again."); return; }
-        if (!data.ok) { alert("Action failed: " + (data.error || res.status)); return; }
-        load(pw); // refresh the list (preserves the current search filter)
-      } catch (e) {
-        alert("Network error — please try again.");
-      }
+      var data = await fetchAction(pw, payload);
+      if (!data) return;
+      if (!data.ok) { alert("Action failed: " + (data.error || "unknown")); return; }
+      refresh();
     }
     document.getElementById("list").addEventListener("click", function (e) {
       var btn = e.target.closest("button[data-action]");
       if (!btn) return;
       var id = btn.getAttribute("data-id");
       var action = btn.getAttribute("data-action");
-      if (action === "delete") {
-        if (!confirm("Delete this consultation permanently? This cannot be undone.")) return;
-        doAction({ action: "delete", id: id });
-      } else if (action === "toggle") {
+      if (action === "toggle") {
         doAction({ action: "setStatus", id: id, status: btn.getAttribute("data-to") });
+      } else if (action === "delete") {
+        doAction({ action: "delete", id: id }); // soft delete — recoverable, no prompt
+      } else if (action === "restore") {
+        doAction({ action: "restore", id: id });
+      } else if (action === "deleteForever") {
+        if (!confirm("Permanently delete this consultation? This cannot be undone.")) return;
+        doAction({ action: "deleteForever", id: id });
       }
     });
 
     // Auto-load if already signed in this session
     (function () {
       var pw = sessionStorage.getItem(KEY);
-      if (pw) { showDash(); load(pw); }
+      if (pw) { showDash(); showActiveView(); }
     })();
   </script>
 </body>

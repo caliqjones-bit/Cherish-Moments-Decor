@@ -11,7 +11,12 @@
 import crypto from "node:crypto";
 import config from "../lib/config.js";
 import logger from "../lib/logger.js";
-import { listConsultations, setConsultationStatus, deleteConsultation } from "../lib/storage.js";
+import {
+  listConsultations,
+  listDeletedConsultations,
+  setConsultationStatus,
+  deleteConsultation,
+} from "../lib/storage.js";
 
 /** Constant-time string comparison (avoids leaking the password via timing). */
 function safeEqual(a, b) {
@@ -62,6 +67,12 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, count: rows.length, consultations: rows });
   }
 
+  if (action === "listDeleted") {
+    const { rows, error } = await listDeletedConsultations();
+    if (error) return res.status(500).json({ ok: false, error });
+    return res.status(200).json({ ok: true, count: rows.length, consultations: rows });
+  }
+
   if (action === "setStatus") {
     const id = body.id;
     const status = body.status;
@@ -73,7 +84,26 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
+  // Soft delete → move to Recently Deleted (recoverable).
   if (action === "delete") {
+    const id = body.id;
+    if (!id) return res.status(400).json({ ok: false, error: "bad_request" });
+    const r = await setConsultationStatus(id, "deleted");
+    if (!r.ok) return res.status(500).json({ ok: false, error: r.error });
+    return res.status(200).json({ ok: true });
+  }
+
+  // Recover a soft-deleted consultation back into the active list.
+  if (action === "restore") {
+    const id = body.id;
+    if (!id) return res.status(400).json({ ok: false, error: "bad_request" });
+    const r = await setConsultationStatus(id, "open");
+    if (!r.ok) return res.status(500).json({ ok: false, error: r.error });
+    return res.status(200).json({ ok: true });
+  }
+
+  // Permanently remove a row (from the Recently Deleted view). Irreversible.
+  if (action === "deleteForever") {
     const id = body.id;
     if (!id) return res.status(400).json({ ok: false, error: "bad_request" });
     const r = await deleteConsultation(id);
