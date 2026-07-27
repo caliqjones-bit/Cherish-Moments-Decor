@@ -335,7 +335,8 @@
       if (action === "toggle") {
         doAction({ action: "setStatus", id: id, status: btn.getAttribute("data-to") });
       } else if (action === "delete") {
-        doAction({ action: "delete", id: id }); // soft delete — recoverable, no prompt
+        if (!confirm("This consultation will be moved to Recently Deleted, where you can recover it if needed. Continue?")) return;
+        doAction({ action: "delete", id: id });
       } else if (action === "restore") {
         doAction({ action: "restore", id: id });
       } else if (action === "deleteForever") {
