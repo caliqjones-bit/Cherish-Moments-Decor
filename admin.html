@@ -64,9 +64,10 @@
     .card-head .when { color: #8a8a84; font-size: .82rem; margin-left: auto; }
     .badge { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
       padding: .18rem .5rem; border-radius: 999px; font-weight: 700; }
-    .badge.confirmed { background: #dff0e4; color: #1c6b3f; }
+    .badge.confirmed, .badge.completed { background: #dff0e4; color: #1c6b3f; }
     .badge.partial   { background: #fdf0d6; color: #8a6218; }
     .badge.received, .badge.needs_attention { background: #fbe0dd; color: #a12b2b; }
+    .badge.open { background: #e7e1d4; color: #5a5442; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: .5rem 1.25rem; margin-top: .85rem; }
     .field .label { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: #9a948a; display: block; }
@@ -76,6 +77,11 @@
     .flags { margin-top: .75rem; display: flex; gap: .5rem; flex-wrap: wrap; }
     .flag { font-size: .7rem; padding: .15rem .5rem; border-radius: 4px; background: #eee; color: #666; }
     .flag.on { background: #dff0e4; color: #1c6b3f; }
+    .actions { margin-top: .85rem; padding-top: .75rem; border-top: 1px solid #eee; display: flex; gap: .5rem; flex-wrap: wrap; }
+    .actions button { font-size: .82rem; padding: .4rem .85rem; }
+    .actions .mark { background: #1c6b3f; color: #fff; }
+    .actions .unmark { background: #e7e1d4; color: var(--evergreen-deep); }
+    .actions .danger { background: #fbe0dd; color: #a12b2b; margin-left: auto; }
     .empty, .loading { text-align: center; color: #7a746a; padding: 3rem 1rem; }
     .hidden { display: none !important; }
   </style>
@@ -147,6 +153,12 @@
         var email = r.email ? '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : "";
         var phone = r.phone ? '<a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a>' : "";
         var notes = r.notes ? '<div class="notes"><span class="label">Notes</span><div>' + esc(r.notes) + '</div></div>' : "";
+        var completed = status === "completed";
+        var toggleBtn = completed
+          ? '<button class="unmark" data-action="toggle" data-id="' + esc(r.id) + '" data-to="open">Mark not completed</button>'
+          : '<button class="mark" data-action="toggle" data-id="' + esc(r.id) + '" data-to="completed">Mark completed</button>';
+        var actions = '<div class="actions">' + toggleBtn +
+          '<button class="danger" data-action="delete" data-id="' + esc(r.id) + '">Delete</button></div>';
         return '' +
           '<div class="card">' +
             '<div class="card-head">' +
@@ -172,6 +184,7 @@
               '<span class="flag ' + (r.email_sent ? "on":"") + '">customer email ' + (r.email_sent ? "sent":"—") + '</span>' +
               '<span class="flag ' + (r.staff_notified ? "on":"") + '">staff notified ' + (r.staff_notified ? "yes":"—") + '</span>' +
             '</div>' +
+            actions +
           '</div>';
       }).join("");
     }
@@ -234,6 +247,38 @@
       sessionStorage.removeItem(KEY); document.getElementById("pw").value = ""; showLogin("");
     });
     document.getElementById("search").addEventListener("input", applySearch);
+
+    // Per-card actions (mark completed / not completed / delete) via delegation
+    async function doAction(payload) {
+      var pw = sessionStorage.getItem(KEY);
+      if (!pw) { showLogin("Session expired — sign in again."); return; }
+      payload.password = pw;
+      try {
+        var res = await fetch("/api/consultations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (res.status === 401) { sessionStorage.removeItem(KEY); showLogin("Session expired — sign in again."); return; }
+        if (!data.ok) { alert("Action failed: " + (data.error || res.status)); return; }
+        load(pw); // refresh the list (preserves the current search filter)
+      } catch (e) {
+        alert("Network error — please try again.");
+      }
+    }
+    document.getElementById("list").addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      var id = btn.getAttribute("data-id");
+      var action = btn.getAttribute("data-action");
+      if (action === "delete") {
+        if (!confirm("Delete this consultation permanently? This cannot be undone.")) return;
+        doAction({ action: "delete", id: id });
+      } else if (action === "toggle") {
+        doAction({ action: "setStatus", id: id, status: btn.getAttribute("data-to") });
+      }
+    });
 
     // Auto-load if already signed in this session
     (function () {

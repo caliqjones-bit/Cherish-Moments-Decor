@@ -11,7 +11,7 @@
 import crypto from "node:crypto";
 import config from "../lib/config.js";
 import logger from "../lib/logger.js";
-import { listConsultations } from "../lib/storage.js";
+import { listConsultations, setConsultationStatus, deleteConsultation } from "../lib/storage.js";
 
 /** Constant-time string comparison (avoids leaking the password via timing). */
 function safeEqual(a, b) {
@@ -53,9 +53,33 @@ export default async function handler(req, res) {
     return res.status(401).json({ ok: false, error: "unauthorized" });
   }
 
-  const { rows, error } = await listConsultations();
-  if (error) {
-    return res.status(500).json({ ok: false, error });
+  // ---- Action router (all past the password gate above) ----
+  const action = (body && body.action) || "list";
+
+  if (action === "list") {
+    const { rows, error } = await listConsultations();
+    if (error) return res.status(500).json({ ok: false, error });
+    return res.status(200).json({ ok: true, count: rows.length, consultations: rows });
   }
-  return res.status(200).json({ ok: true, count: rows.length, consultations: rows });
+
+  if (action === "setStatus") {
+    const id = body.id;
+    const status = body.status;
+    if (!id || !["completed", "open"].includes(status)) {
+      return res.status(400).json({ ok: false, error: "bad_request" });
+    }
+    const r = await setConsultationStatus(id, status);
+    if (!r.ok) return res.status(500).json({ ok: false, error: r.error });
+    return res.status(200).json({ ok: true });
+  }
+
+  if (action === "delete") {
+    const id = body.id;
+    if (!id) return res.status(400).json({ ok: false, error: "bad_request" });
+    const r = await deleteConsultation(id);
+    if (!r.ok) return res.status(500).json({ ok: false, error: r.error });
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(400).json({ ok: false, error: "unknown_action" });
 }
