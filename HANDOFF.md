@@ -96,3 +96,23 @@ Replace `[your email]` with the single email the developer uses for these accoun
 > To hand over the website code:
 > 1. Create a free account (or org) at github.com and tell me the username.
 > 2. After I transfer the repo to you, add me back as a **Collaborator** (repo Settings → Collaborators).
+
+---
+
+## Admin dashboard (view all bookings)
+A password-protected page lists every consultation straight from the database —
+independent of email, so it shows all bookings even if an email alert never arrived.
+
+- **URL (current Vercel deployment):** https://cherish-moments-decor-htfk.vercel.app/admin
+- **URL (once the custom domain is live):** https://cherishmomentsdecor.com/admin — same page, same password.
+- **It reads from whichever Supabase database the app points to**, so after the handoff it
+  automatically shows the client's data.
+
+**To enable it (one-time):**
+1. Vercel → **Settings → Environment Variables** → add **`ADMIN_PASSWORD`** = a strong password.
+2. **Redeploy** (Deployments → ⋯ → Redeploy).
+3. Open `/admin`, enter that password. Give the client the URL + password.
+
+Until `ADMIN_PASSWORD` is set, the page loads but shows "Admin view isn't enabled yet."
+The password is checked server-side; the Supabase service-role key never reaches the browser.
+`/admin` is marked noindex and disallowed in robots.txt.
