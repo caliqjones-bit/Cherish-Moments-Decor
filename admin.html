@@ -55,6 +55,8 @@
     /* Toolbar */
     .toolbar { display: flex; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
     .toolbar input[type="search"] { flex: 1; min-width: 180px; }
+    .toolbar .toggle { display: flex; align-items: center; gap: .45rem; white-space: nowrap; color: #5a5442; font-size: .92rem; cursor: pointer; }
+    .toolbar .toggle input { width: auto; }
     .toolbar button { background: #e7e1d4; color: var(--evergreen-deep); }
     /* Cards */
     .card { background: #fff; border: 1px solid #e6e0d3; border-left: 4px solid var(--champagne);
@@ -110,6 +112,7 @@
     <div class="wrap">
       <div class="toolbar">
         <input type="search" id="search" placeholder="Search name, email, city, project type…">
+        <label class="toggle"><input type="checkbox" id="hide-completed"> Hide completed</label>
       </div>
       <div id="list"></div>
       <div id="state"></div>
@@ -191,8 +194,10 @@
 
     function applySearch() {
       var q = document.getElementById("search").value.trim().toLowerCase();
-      if (!q) return render(all);
+      var hideDone = document.getElementById("hide-completed").checked;
       render(all.filter(function (r) {
+        if (hideDone && (r.status || "").toLowerCase() === "completed") return false;
+        if (!q) return true;
         return [r.full_name, r.first_name, r.last_name, r.email, r.city, r.project_type, r.notes]
           .join(" ").toLowerCase().indexOf(q) !== -1;
       }));
@@ -247,6 +252,7 @@
       sessionStorage.removeItem(KEY); document.getElementById("pw").value = ""; showLogin("");
     });
     document.getElementById("search").addEventListener("input", applySearch);
+    document.getElementById("hide-completed").addEventListener("change", applySearch);
 
     // Per-card actions (mark completed / not completed / delete) via delegation
     async function doAction(payload) {
