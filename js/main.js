@@ -19,7 +19,7 @@
      is connected). Times are labels only; all submissions are REQUESTS
      awaiting confirmation, never auto-confirmed. */
   var BOOKING = {
-    daysAhead: 120,           // how far out dates may be requested
+    daysAhead: 365,           // how far out dates may be requested (a full year, so the whole holiday season is bookable)
     minLeadDays: 2,           // earliest selectable date = today + minLeadDays
     closedWeekdays: []        // e.g. [0] to close Sundays (0=Sun ... 6=Sat)
   };
