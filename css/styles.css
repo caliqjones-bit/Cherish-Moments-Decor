@@ -477,7 +477,6 @@ a[href^="tel:"] { white-space: nowrap; }
    it much taller than the surrounding inputs. */
 .field input[type="date"] {
   -webkit-appearance: none; appearance: none;
-  height: 48px; line-height: 1.2;
 }
 .field input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .field input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.55; }
