@@ -89,6 +89,22 @@
     .actions .danger { background: #fbe0dd; color: #a12b2b; margin-left: auto; }
     .empty, .loading { text-align: center; color: #7a746a; padding: 3rem 1rem; }
     .hidden { display: none !important; }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 560px) {
+      .topbar { padding: .8rem 1rem; gap: .5rem .6rem; }
+      .topbar h1 { font-size: 1.3rem; }
+      .topbar button { padding: .45rem .7rem; font-size: .88rem; }
+      .wrap { padding: 1rem; }
+      /* Stack search and the toggle so the search field gets full width */
+      .toolbar { flex-direction: column; align-items: stretch; gap: .6rem; }
+      .toolbar .toggle { align-self: flex-start; }
+      .card { padding: .9rem 1rem; }
+      .card-head .name { font-size: 1.2rem; }
+      /* Give action buttons room; keep Delete from crowding on one line */
+      .actions button { flex: 1 1 auto; }
+      .actions .danger { margin-left: 0; }
+    }
   </style>
 </head>
 <body>
