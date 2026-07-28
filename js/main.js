@@ -363,7 +363,7 @@
     var view = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     // Two independent selections, both picked from this one calendar.
     var installSel = null, consultSel = null;
-    var activeMode = "install";                 // which date the next tap sets
+    var activeMode = "consult";                 // which date the next tap sets (consultation first)
     var consultInput = document.getElementById("bk-consult-date");
     var modeInstallBtn = document.getElementById("mode-install");
     var modeConsultBtn = document.getElementById("mode-consult");
@@ -448,7 +448,7 @@
     if (modeConsultBtn) modeConsultBtn.addEventListener("click", function () { setMode("consult"); });
     prevBtn.addEventListener("click", function () { view.setMonth(view.getMonth() - 1); renderCal(); });
     nextBtn.addEventListener("click", function () { view.setMonth(view.getMonth() + 1); renderCal(); });
-    setMode("install");
+    setMode("consult");
     renderCal();
     updateModeVals();
 
@@ -478,8 +478,8 @@
           return;
         }
         if (!installSel || !consultSel) {
-          setMode(!installSel ? "install" : "consult");
-          showStatus(bookingForm, "err", "Please select both your installation and consultation dates on the calendar before submitting.");
+          setMode(!consultSel ? "consult" : "install");
+          showStatus(bookingForm, "err", "Please select both your consultation and installation dates on the calendar before submitting.");
           return;
         }
 
