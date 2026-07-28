@@ -472,6 +472,15 @@ a[href^="tel:"] { white-space: nowrap; }
   background: var(--winter-white); border: 1px solid #cfcabe; border-radius: var(--radius);
   padding: 0.85rem 1rem; min-height: 48px; transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
+/* Native date input (Preferred Consultation Date): strip the native control so it
+   matches the height/appearance of the other fields — iOS Safari otherwise renders
+   it much taller than the surrounding inputs. */
+.field input[type="date"] {
+  -webkit-appearance: none; appearance: none;
+  height: 48px; line-height: 1.2;
+}
+.field input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+.field input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.55; }
 .field textarea { min-height: 130px; resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(201, 168, 106, 0.25); }
 .field .error-msg { display: none; font-size: 0.82rem; color: #9d2235; margin-top: 0.35rem; }
