@@ -89,12 +89,22 @@
           <!-- Calendar column -->
           <div id="booking-cal-col">
             <div class="cal" id="cal">
+              <div class="cal-modes" role="group" aria-label="Choose which date you are selecting">
+                <button type="button" class="cal-mode is-active" data-mode="install" id="mode-install">
+                  <span class="cal-mode-label">Installation date <span class="req" aria-hidden="true">*</span></span>
+                  <span class="cal-mode-val empty" id="cal-install-val">Tap a date</span>
+                </button>
+                <button type="button" class="cal-mode" data-mode="consult" id="mode-consult">
+                  <span class="cal-mode-label">Consultation date <span class="req" aria-hidden="true">*</span></span>
+                  <span class="cal-mode-val empty" id="cal-consult-val">Tap a date</span>
+                </button>
+              </div>
               <div class="cal-head">
                 <button type="button" id="cal-prev" aria-label="Previous month">‹</button>
                 <span class="cal-title" id="cal-title" aria-live="polite">Month</span>
                 <button type="button" id="cal-next" aria-label="Next month">›</button>
               </div>
-              <div class="cal-grid" id="cal-grid" role="grid" aria-label="Choose a preferred consultation date">
+              <div class="cal-grid" id="cal-grid" role="grid" aria-label="Choose your preferred dates">
                 <span class="dow">Sun</span><span class="dow">Mon</span><span class="dow">Tue</span><span class="dow">Wed</span><span class="dow">Thu</span><span class="dow">Fri</span><span class="dow">Sat</span>
               </div>
               <div class="booking-summary" id="booking-summary" hidden aria-live="polite"></div>
@@ -147,9 +157,8 @@
               </div>
               <div class="field">
                 <label for="bk-consult-date">Preferred Consultation Date <span class="req" aria-hidden="true">*</span></label>
-                <input id="bk-consult-date" name="consultation_date" type="date" required>
-                <p class="error-msg">Please choose a consultation date.</p>
-                <p class="form-note" style="margin-top:.35rem">The day you'd like to meet with us — separate from your install date.</p>
+                <input id="bk-consult-date" name="consultation_date" type="text" readonly required placeholder="Choose from the calendar">
+                <p class="error-msg">Please choose a consultation date from the calendar.</p>
               </div>
               <div class="field">
                 <label for="bk-height">Approximate Tree Height</label>
@@ -200,7 +209,7 @@
               </div>
               <div class="hp-field" aria-hidden="true"><label>Leave this field empty<input type="text" name="company_website" tabindex="-1" autocomplete="off"></label></div>
               <div class="full">
-                <p class="form-note" style="margin-bottom:.5rem;text-align:center">Select a date on the calendar to enable submission.</p>
+                <p class="form-note" style="margin-bottom:.5rem;text-align:center">Select both your installation and consultation dates on the calendar to enable submission.</p>
                 <button class="btn btn-primary" type="submit" style="width:100%">Submit Consultation Request</button>
                 <p class="form-status" aria-live="polite"></p>
                 <p class="form-note mt-1">Submitting sends a <strong>consultation request</strong> — our team will confirm availability with you personally.</p>

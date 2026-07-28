@@ -509,6 +509,20 @@ a[href^="tel:"] { white-space: nowrap; }
 .cal-grid .day:hover:not([disabled]) { border-color: var(--champagne); }
 .cal-grid .day[disabled] { color: #c3c3ba; cursor: not-allowed; text-decoration: line-through; text-decoration-color: #ddd; }
 .cal-grid .day.selected { background: var(--evergreen-deep); color: var(--ivory); border-color: var(--evergreen-deep); }
+/* Dual-date calendar: mode toggle + two distinct selection colors */
+.cal-modes { display: flex; gap: 0.6rem; margin-bottom: 1.1rem; }
+.cal-mode { flex: 1; text-align: left; background: var(--winter-white); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.55rem 0.7rem; cursor: pointer; font-family: var(--font-sans); transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease); }
+.cal-mode:hover { border-color: var(--champagne); }
+.cal-mode.is-active { border-color: var(--champagne); box-shadow: 0 0 0 2px rgba(201, 168, 106, 0.25); }
+.cal-mode .cal-mode-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: #8a7c5f; }
+.cal-mode .cal-mode-label::before { content: ""; width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex: none; }
+.cal-mode[data-mode="install"] .cal-mode-label::before { background: var(--champagne); }
+.cal-mode[data-mode="consult"] .cal-mode-label::before { background: var(--evergreen-deep); }
+.cal-mode .cal-mode-val { display: block; margin-top: 0.25rem; font-family: var(--font-serif); font-size: 1.05rem; color: var(--evergreen-deep); }
+.cal-mode .cal-mode-val.empty { color: #a8a49a; font-style: italic; font-size: 0.92rem; }
+.cal-grid .day.sel-install { background: var(--champagne); color: var(--evergreen-deep); border-color: var(--champagne); font-weight: 600; }
+.cal-grid .day.sel-consult { background: var(--evergreen-deep); color: var(--ivory); border-color: var(--evergreen-deep); font-weight: 600; }
+.cal-grid .day.sel-install.sel-consult { background: linear-gradient(135deg, var(--champagne) 0 50%, var(--evergreen-deep) 50% 100%); color: #fff; }
 .slot-hint { font-size: 0.85rem; color: #6b6b64; margin-top: 0.8rem; }
 .booking-summary { background: var(--ivory); border: 1px solid var(--gold-line); border-radius: var(--radius); padding: 1rem 1.3rem; font-size: 0.95rem; margin-top: 1.2rem; }
 

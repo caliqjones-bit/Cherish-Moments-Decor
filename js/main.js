@@ -361,25 +361,35 @@
     var minDate = new Date(today); minDate.setDate(minDate.getDate() + BOOKING.minLeadDays);
     var maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + BOOKING.daysAhead);
     var view = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-    var selDate = null;
-
-    // Constrain the native consultation-date picker to the same booking window.
-    (function () {
-      var ci = document.getElementById("bk-consult-date");
-      if (!ci) return;
-      function iso(d) {
-        return d.getFullYear() + "-" +
-          String(d.getMonth() + 1).padStart(2, "0") + "-" +
-          String(d.getDate()).padStart(2, "0");
-      }
-      ci.min = iso(minDate);
-      ci.max = iso(maxDate);
-    })();
+    // Two independent selections, both picked from this one calendar.
+    var installSel = null, consultSel = null;
+    var activeMode = "install";                 // which date the next tap sets
+    var consultInput = document.getElementById("bk-consult-date");
+    var modeInstallBtn = document.getElementById("mode-install");
+    var modeConsultBtn = document.getElementById("mode-consult");
 
     var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     var fmt = function (d) {
       return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     };
+    function sameDay(a, b) { return !!(a && b && a.getTime() === b.getTime()); }
+
+    function setMode(mode) {
+      activeMode = mode;
+      if (modeInstallBtn) modeInstallBtn.classList.toggle("is-active", mode === "install");
+      if (modeConsultBtn) modeConsultBtn.classList.toggle("is-active", mode === "consult");
+      grid.setAttribute("aria-label", mode === "consult"
+        ? "Choose a preferred consultation date" : "Choose a preferred installation date");
+    }
+    function updateModeVals() {
+      function setVal(el, d) {
+        if (!el) return;
+        el.textContent = d ? fmt(d) : "Tap a date";
+        el.classList.toggle("empty", !d);
+      }
+      setVal(document.getElementById("cal-install-val"), installSel);
+      setVal(document.getElementById("cal-consult-val"), consultSel);
+    }
 
     function renderCal() {
       monthTitle.textContent = MONTHS[view.getMonth()] + " " + view.getFullYear();
@@ -403,14 +413,16 @@
         } else {
           (function (date) {
             b.addEventListener("click", function () {
-              selDate = date;
-              grid.querySelectorAll(".day.selected").forEach(function (n) { n.classList.remove("selected"); });
-              this.classList.add("selected");
-              updateSummary();
+              if (activeMode === "consult") consultSel = date; else installSel = date;
+              // Guide the user to the other date if it hasn't been set yet.
+              if (activeMode === "install" && !consultSel) setMode("consult");
+              else if (activeMode === "consult" && !installSel) setMode("install");
+              renderCal(); updateSummary(); updateModeVals();
             });
           })(date);
         }
-        if (selDate && date.getTime() === selDate.getTime()) b.classList.add("selected");
+        if (sameDay(date, installSel)) b.classList.add("sel-install");
+        if (sameDay(date, consultSel)) b.classList.add("sel-consult");
         grid.appendChild(b);
       }
       var prevMonthEnd = new Date(view.getFullYear(), view.getMonth(), 0);
@@ -419,19 +431,26 @@
       nextBtn.disabled = nextMonthStart > maxDate;
     }
     function updateSummary() {
-      if (dateInput) dateInput.value = selDate ? fmt(selDate) : "";
+      if (dateInput) { dateInput.value = installSel ? fmt(installSel) : ""; if (installSel) clearInvalid(dateInput); }
+      if (consultInput) { consultInput.value = consultSel ? fmt(consultSel) : ""; if (consultSel) clearInvalid(consultInput); }
       if (!summary) return;
-      if (selDate) {
+      if (installSel || consultSel) {
         summary.hidden = false;
-        summary.innerHTML = "<strong>Requested installation date:</strong> " + fmt(selDate) +
-          "<br><span class='small'>This is a request — our team will confirm availability with you directly.</span>";
+        summary.innerHTML =
+          (installSel ? "<strong>Requested installation date:</strong> " + fmt(installSel) + "<br>" : "") +
+          (consultSel ? "<strong>Requested consultation date:</strong> " + fmt(consultSel) + "<br>" : "") +
+          "<span class='small'>These are requests — our team will confirm availability with you directly.</span>";
       } else {
         summary.hidden = true;
       }
     }
+    if (modeInstallBtn) modeInstallBtn.addEventListener("click", function () { setMode("install"); });
+    if (modeConsultBtn) modeConsultBtn.addEventListener("click", function () { setMode("consult"); });
     prevBtn.addEventListener("click", function () { view.setMonth(view.getMonth() - 1); renderCal(); });
     nextBtn.addEventListener("click", function () { view.setMonth(view.getMonth() + 1); renderCal(); });
+    setMode("install");
     renderCal();
+    updateModeVals();
 
     /* Booking form submission — posts structured JSON to the automation API
        (/api/book-consultation), then redirects to the branded confirmation
@@ -458,8 +477,9 @@
           showStatus(bookingForm, "err", "Please review the highlighted fields above.");
           return;
         }
-        if (!selDate) {
-          showStatus(bookingForm, "err", "Please select a preferred installation date from the calendar before submitting.");
+        if (!installSel || !consultSel) {
+          setMode(!installSel ? "install" : "consult");
+          showStatus(bookingForm, "err", "Please select both your installation and consultation dates on the calendar before submitting.");
           return;
         }
 
@@ -472,13 +492,7 @@
           project_type: val("bk-type"),
           city: val("bk-city"),
           preferred_installation_date: val("bk-date"),
-          consultation_date: (function () {
-            var v = val("bk-consult-date");
-            if (!v) return "";
-            var p = v.split("-"); // native date input value is YYYY-MM-DD
-            var d = new Date(+p[0], (+p[1]) - 1, +p[2]);
-            return isNaN(d) ? v : d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-          })(),
+          consultation_date: val("bk-consult-date"),
           tree_height: val("bk-height"),
           tree_count: val("bk-count"),
           areas: val("bk-areas"),
