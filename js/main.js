@@ -363,6 +363,19 @@
     var view = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     var selDate = null;
 
+    // Constrain the native consultation-date picker to the same booking window.
+    (function () {
+      var ci = document.getElementById("bk-consult-date");
+      if (!ci) return;
+      function iso(d) {
+        return d.getFullYear() + "-" +
+          String(d.getMonth() + 1).padStart(2, "0") + "-" +
+          String(d.getDate()).padStart(2, "0");
+      }
+      ci.min = iso(minDate);
+      ci.max = iso(maxDate);
+    })();
+
     var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     var fmt = function (d) {
       return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -459,6 +472,13 @@
           project_type: val("bk-type"),
           city: val("bk-city"),
           preferred_installation_date: val("bk-date"),
+          consultation_date: (function () {
+            var v = val("bk-consult-date");
+            if (!v) return "";
+            var p = v.split("-"); // native date input value is YYYY-MM-DD
+            var d = new Date(+p[0], (+p[1]) - 1, +p[2]);
+            return isNaN(d) ? v : d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+          })(),
           tree_height: val("bk-height"),
           tree_count: val("bk-count"),
           areas: val("bk-areas"),

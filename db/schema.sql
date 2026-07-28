@@ -23,6 +23,7 @@ create table if not exists public.consultations (
   city                        text,
   project_address             text,
   preferred_installation_date text,
+  consultation_date           text,
   tree_height                 text,
   tree_count                  text,
   services_requested          text,
