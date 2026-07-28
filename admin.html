@@ -71,7 +71,11 @@
     .badge.received, .badge.needs_attention { background: #fbe0dd; color: #a12b2b; }
     .badge.open { background: #e7e1d4; color: #5a5442; }
     .badge.deleted { background: #eee; color: #999; }
+    .deleted-bar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .deleted-bar .deleted-note { flex: 1; min-width: 220px; margin: 0; }
     .deleted-note { color: #7a746a; font-size: .9rem; margin: 0 0 1rem; }
+    .purge-all { background: #a12b2b; color: #fff; white-space: nowrap; }
+    .purge-all:hover { filter: brightness(1.08); }
     .card.is-deleted { border-left-color: #bbb; opacity: .9; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: .5rem 1.25rem; margin-top: .85rem; }
@@ -104,6 +108,7 @@
       /* Give action buttons room; keep Delete from crowding on one line */
       .actions button { flex: 1 1 auto; }
       .actions .danger { margin-left: 0; }
+      .purge-all { width: 100%; }
     }
   </style>
 </head>
@@ -135,7 +140,10 @@
         <input type="search" id="search" placeholder="Search name, email, city, project type…">
         <label class="toggle"><input type="checkbox" id="hide-completed"> Hide completed</label>
       </div>
-      <p id="deleted-note" class="deleted-note hidden">Deleted consultations are kept here so you can recover them. "Delete permanently" cannot be undone.</p>
+      <div id="deleted-bar" class="deleted-bar hidden">
+        <p class="deleted-note">Deleted consultations are kept here so you can recover them. "Delete permanently" cannot be undone.</p>
+        <button id="purge-all" type="button" class="purge-all hidden">Empty Recently Deleted</button>
+      </div>
       <div id="list"></div>
       <div id="state"></div>
     </div>
@@ -289,6 +297,7 @@
       if (!data.ok) { document.getElementById("state").innerHTML = '<div class="empty">Error: ' + esc(data.error || "unknown") + '</div>'; return; }
       deleted = data.consultations || [];
       document.getElementById("count").textContent = deleted.length + " in Recently Deleted";
+      document.getElementById("purge-all").classList.toggle("hidden", deleted.length === 0);
       render(deleted, "deleted");
     }
 
@@ -302,7 +311,7 @@
       view = "active";
       document.getElementById("view-title").textContent = "Consultations";
       document.getElementById("toolbar").classList.remove("hidden");
-      document.getElementById("deleted-note").classList.add("hidden");
+      document.getElementById("deleted-bar").classList.add("hidden");
       document.getElementById("show-deleted").classList.remove("hidden");
       document.getElementById("show-active").classList.add("hidden");
       refresh();
@@ -311,7 +320,7 @@
       view = "deleted";
       document.getElementById("view-title").textContent = "Recently Deleted";
       document.getElementById("toolbar").classList.add("hidden");
-      document.getElementById("deleted-note").classList.remove("hidden");
+      document.getElementById("deleted-bar").classList.remove("hidden");
       document.getElementById("show-deleted").classList.add("hidden");
       document.getElementById("show-active").classList.remove("hidden");
       refresh();
@@ -329,6 +338,12 @@
     document.getElementById("refresh").addEventListener("click", refresh);
     document.getElementById("show-deleted").addEventListener("click", showDeletedView);
     document.getElementById("show-active").addEventListener("click", showActiveView);
+    document.getElementById("purge-all").addEventListener("click", function () {
+      var n = deleted.length;
+      if (!n) return;
+      if (!confirm("Permanently delete ALL " + n + " consultation" + (n === 1 ? "" : "s") + " in Recently Deleted? This cannot be undone.")) return;
+      doAction({ action: "purgeDeleted" });
+    });
     document.getElementById("logout").addEventListener("click", function () {
       sessionStorage.removeItem(KEY); document.getElementById("pw").value = ""; view = "active"; showLogin("");
     });

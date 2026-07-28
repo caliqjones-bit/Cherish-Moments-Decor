@@ -16,6 +16,7 @@ import {
   listDeletedConsultations,
   setConsultationStatus,
   deleteConsultation,
+  purgeDeletedConsultations,
 } from "../lib/storage.js";
 
 /** Constant-time string comparison (avoids leaking the password via timing). */
@@ -107,6 +108,13 @@ export default async function handler(req, res) {
     const id = body.id;
     if (!id) return res.status(400).json({ ok: false, error: "bad_request" });
     const r = await deleteConsultation(id);
+    if (!r.ok) return res.status(500).json({ ok: false, error: r.error });
+    return res.status(200).json({ ok: true });
+  }
+
+  // Permanently remove ALL soft-deleted rows (empty Recently Deleted). Irreversible.
+  if (action === "purgeDeleted") {
+    const r = await purgeDeletedConsultations();
     if (!r.ok) return res.status(500).json({ ok: false, error: r.error });
     return res.status(200).json({ ok: true });
   }
